@@ -1,0 +1,2532 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CipherVault — Безопасный менеджер паролей</title>
+  <meta name="description" content="CipherVault — бесплатный кроссплатформенный менеджер паролей с шифрованием AES-256-GCM. Passkeys, биометрия, синхронизация через Google Drive.">
+  <meta property="og:title" content="CipherVault — Безопасный менеджер паролей">
+  <meta property="og:description" content="Бесплатный менеджер паролей с AES-256-GCM шифрованием. Passkeys, биометрия, 5 платформ.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://github.com/vipecoder228/CipherVault">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CipherVault — Безопасный менеджер паролей">
+  <meta name="twitter:description" content="Бесплатный менеджер паролей с AES-256-GCM шифрованием. Passkeys, биометрия, 5 платформ.">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+    :root {
+      --vault: #06080D;
+      --steel: #0C1017;
+      --plate: #131922;
+      --glass: rgba(19, 25, 34, 0.6);
+      --chrome: #E2E8F0;
+      --muted: #64748B;
+      --cipher: #3B82F6;
+      --cipher-light: #60A5FA;
+      --cipher-glow: rgba(59, 130, 246, 0.4);
+      --glow: #10B981;
+      --glow-glow: rgba(16, 185, 129, 0.3);
+      --violet: #8B5CF6;
+      --violet-glow: rgba(139, 92, 246, 0.3);
+      --danger: #EF4444;
+      --border: rgba(59, 130, 246, 0.12);
+      --border-hover: rgba(59, 130, 246, 0.3);
+    }
+
+    [data-theme="light"] {
+      --vault: #F8FAFC;
+      --steel: #FFFFFF;
+      --plate: #F1F5F9;
+      --glass: rgba(255, 255, 255, 0.7);
+      --chrome: #1E293B;
+      --muted: #64748B;
+      --cipher: #2563EB;
+      --cipher-light: #3B82F6;
+      --cipher-glow: rgba(37, 99, 235, 0.25);
+      --glow: #059669;
+      --glow-glow: rgba(5, 150, 105, 0.2);
+      --violet: #7C3AED;
+      --violet-glow: rgba(124, 58, 237, 0.2);
+      --danger: #DC2626;
+      --border: rgba(59, 130, 246, 0.12);
+      --border-hover: rgba(59, 130, 246, 0.3);
+    }
+
+    [data-theme="light"] .bg-grid {
+      background-image:
+        linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+    }
+
+    [data-theme="light"] .bg-glow {
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, rgba(139, 92, 246, 0.03) 40%, transparent 70%);
+    }
+
+    [data-theme="light"] #particles {
+      opacity: 0.4;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--vault);
+      color: var(--chrome);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── ANIMATED GRID BG ── */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-image:
+        linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 30%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 30%, transparent 100%);
+    }
+
+    .bg-glow {
+      position: fixed;
+      top: -30%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1200px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.04) 40%, transparent 70%);
+      z-index: 0;
+      pointer-events: none;
+      animation: glow-drift 12s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow-drift {
+      0% { transform: translateX(-50%) translateY(0); }
+      100% { transform: translateX(-50%) translateY(40px); }
+    }
+
+    /* ── PARTICLES CANVAS ── */
+    #particles {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .bg-glow { animation: none; }
+      #particles { display: none; }
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(6, 8, 13, 0.7);
+      backdrop-filter: blur(20px) saturate(1.5);
+      -webkit-backdrop-filter: blur(20px) saturate(1.5);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--chrome);
+    }
+
+    .nav-brand svg { width: 30px; height: 30px; }
+
+    .nav-brand span {
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, var(--cipher-light), var(--violet));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--chrome); }
+
+    .nav-cta {
+      background: linear-gradient(135deg, var(--cipher), var(--violet));
+      color: white !important;
+      padding: 0.55rem 1.4rem;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: opacity 0.2s, transform 0.2s;
+      box-shadow: 0 0 20px var(--cipher-glow);
+    }
+
+    .nav-cta:hover {
+      opacity: 0.9;
+      color: white !important;
+      transform: translateY(-1px);
+    }
+
+    /* ── HAMBURGER ── */
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem;
+      z-index: 200;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--chrome);
+      margin: 5px 0;
+      transition: all 0.3s;
+      border-radius: 2px;
+    }
+
+    .hamburger.active span:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .hamburger.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+    }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(6, 8, 13, 0.95);
+      backdrop-filter: blur(20px);
+      z-index: 150;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+    }
+
+    .mobile-menu.open {
+      display: flex;
+    }
+
+    .mobile-menu a {
+      color: var(--chrome);
+      text-decoration: none;
+      font-size: 1.5rem;
+      font-weight: 700;
+      transition: color 0.2s;
+    }
+
+    .mobile-menu a:hover { color: var(--cipher-light); }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .hamburger { display: block; }
+      .theme-toggle { position: fixed; top: 0.75rem; right: 3.5rem; z-index: 160; }
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 7rem 2rem 4rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--cipher-light);
+      margin-bottom: 2rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .hero-badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--glow);
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hero-badge .dot { animation: none; opacity: 1; }
+    }
+
+    /* ── VAULT LOCK ── */
+    .vault-lock {
+      position: relative;
+      width: 180px;
+      height: 180px;
+      margin-bottom: 3rem;
+    }
+
+    .vault-lock .ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 1px solid;
+    }
+
+    .vault-lock .ring-1 {
+      width: 140px; height: 140px;
+      border-color: rgba(59, 130, 246, 0.15);
+      animation: ring-pulse 4s ease-in-out infinite;
+    }
+
+    .vault-lock .ring-2 {
+      width: 170px; height: 170px;
+      border-color: rgba(139, 92, 246, 0.1);
+      animation: ring-pulse 4s ease-in-out infinite 1s;
+    }
+
+    .vault-lock .ring-3 {
+      width: 200px; height: 200px;
+      border-color: rgba(16, 185, 129, 0.08);
+      animation: ring-pulse 4s ease-in-out infinite 2s;
+    }
+
+    @keyframes ring-pulse {
+      0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(0.95); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .vault-lock .ring { animation: none; opacity: 0.5; }
+    }
+
+    .vault-lock .shield-main {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px; height: 100px;
+    }
+
+    .vault-lock .shield-main svg {
+      width: 100%; height: 100%;
+      filter: drop-shadow(0 0 30px var(--cipher-glow)) drop-shadow(0 0 60px rgba(59, 130, 246, 0.15));
+    }
+
+    .hero h1 {
+      font-size: clamp(3rem, 7vw, 5.5rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero h1 .line-2 {
+      display: block;
+      background: linear-gradient(135deg, var(--cipher-light) 0%, var(--violet) 50%, var(--glow) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      background-size: 200% 200%;
+      animation: gradient-shift 6s ease-in-out infinite;
+    }
+
+    @keyframes gradient-shift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hero h1 .line-2 { animation: none; background-position: 0% 50%; }
+    }
+
+    .hero .subtitle {
+      font-size: clamp(1.05rem, 2vw, 1.3rem);
+      color: var(--muted);
+      max-width: 560px;
+      margin-bottom: 3rem;
+      line-height: 1.75;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.9rem 2.2rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.25s;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cipher), var(--violet));
+      color: white;
+      box-shadow: 0 4px 24px var(--cipher-glow), 0 0 0 1px rgba(59, 130, 246, 0.2);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px var(--cipher-glow), 0 0 0 1px rgba(59, 130, 246, 0.4), 0 0 60px rgba(59, 130, 246, 0.15);
+    }
+
+    .btn-secondary {
+      background: var(--glass);
+      color: var(--chrome);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--border-hover);
+      background: rgba(59, 130, 246, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 3rem;
+      margin-top: 4.5rem;
+      padding-top: 2.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .stat { text-align: center; }
+
+    .stat-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      background: linear-gradient(135deg, var(--cipher-light), var(--glow));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 0.2rem;
+      font-weight: 500;
+    }
+
+    /* ── SECTIONS ── */
+    section {
+      padding: 7rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--cipher);
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section-label::before {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: var(--cipher);
+    }
+
+    .section-title {
+      font-size: clamp(2rem, 4.5vw, 3rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      margin-bottom: 1rem;
+      line-height: 1.15;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      max-width: 520px;
+      font-size: 1.05rem;
+      margin-bottom: 3.5rem;
+      line-height: 1.7;
+    }
+
+    /* ── SCREENSHOT PREVIEW ── */
+    .screenshot-section {
+      text-align: center;
+    }
+
+    .screenshot-frame {
+      position: relative;
+      max-width: 900px;
+      margin: 0 auto;
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--steel);
+      border: 1px solid var(--border);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(59, 130, 246, 0.1);
+    }
+
+    .screenshot-titlebar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: var(--plate);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .screenshot-titlebar .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .screenshot-titlebar .dot.red { background: #EF4444; }
+    .screenshot-titlebar .dot.yellow { background: #F59E0B; }
+    .screenshot-titlebar .dot.green { background: #10B981; }
+
+    .screenshot-titlebar .title {
+      flex: 1;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .screenshot-body {
+      padding: 1rem;
+      background: #0D1117;
+    }
+
+    .screenshot-body img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      display: block;
+    }
+
+    .screenshot-caption {
+      margin-top: 1.5rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      position: relative;
+    }
+
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 40px;
+      left: 16.67%;
+      right: 16.67%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--cipher), var(--violet), var(--glow));
+      opacity: 0.3;
+    }
+
+    .step {
+      text-align: center;
+      position: relative;
+    }
+
+    .step-number {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 1.1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step:nth-child(1) .step-number {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--cipher-light);
+      border: 2px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .step:nth-child(2) .step-number {
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--violet);
+      border: 2px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .step:nth-child(3) .step-number {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--glow);
+      border: 2px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .step h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .step p {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.6;
+      max-width: 260px;
+      margin: 0 auto;
+    }
+
+    /* ── FEATURES ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+
+    .feature-card {
+      position: relative;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      backdrop-filter: blur(12px);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--cipher), transparent);
+      opacity: 0;
+      transition: opacity 0.35s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(59, 130, 246, 0.08);
+    }
+
+    .feature-card:hover::before { opacity: 1; }
+
+    .feature-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .feature-icon.blue { background: rgba(59, 130, 246, 0.12); color: var(--cipher-light); }
+    .feature-icon.green { background: rgba(16, 185, 129, 0.12); color: var(--glow); }
+    .feature-icon.violet { background: rgba(139, 92, 246, 0.12); color: var(--violet); }
+
+    .feature-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-card p {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.65;
+    }
+
+    /* ── SECURITY ── */
+    .security-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+
+    .security-item {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.75rem;
+      backdrop-filter: blur(12px);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .security-item:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-3px);
+    }
+
+    .security-item h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .security-item .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--glow);
+      flex-shrink: 0;
+      box-shadow: 0 0 8px var(--glow-glow);
+    }
+
+    .security-item p {
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.65;
+      margin-bottom: 0.85rem;
+    }
+
+    .tech-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--cipher-light);
+      padding: 0.35rem 0.7rem;
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.12);
+      border-radius: 6px;
+      display: inline-block;
+    }
+
+    /* ── INTEGRATIONS ── */
+    .integrations-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1.25rem;
+    }
+
+    .integration-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.75rem 1rem;
+      text-align: center;
+      backdrop-filter: blur(12px);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .integration-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-4px);
+    }
+
+    .integration-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--cipher-light);
+    }
+
+    .integration-card h4 {
+      font-size: 0.92rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+
+    .integration-card p {
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+
+    /* ── PLATFORMS ── */
+    .platforms-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1.25rem;
+    }
+
+    .platform-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem 1.25rem;
+      text-align: center;
+      backdrop-filter: blur(12px);
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .platform-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 60%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cipher), transparent);
+      opacity: 0;
+      transition: opacity 0.35s;
+    }
+
+    .platform-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-4px);
+    }
+
+    .platform-card:hover::after { opacity: 1; }
+
+    .platform-icon {
+      font-size: 2.25rem;
+      margin-bottom: 1rem;
+      color: var(--cipher);
+    }
+
+    .platform-card h4 {
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+      font-size: 0.95rem;
+    }
+
+    .platform-status {
+      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .platform-status.ready { color: var(--glow); }
+    .platform-status.wip { color: var(--muted); }
+
+    /* ── FAQ ── */
+    .faq-list {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      transition: border-color 0.3s;
+    }
+
+    .faq-item:hover {
+      border-color: var(--border-hover);
+    }
+
+    .faq-question {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      color: var(--chrome);
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: 'Inter', system-ui, sans-serif;
+      text-align: left;
+    }
+
+    .faq-question:hover { color: var(--cipher-light); }
+
+    .faq-chevron {
+      width: 20px; height: 20px;
+      transition: transform 0.3s;
+      flex-shrink: 0;
+      color: var(--muted);
+    }
+
+    .faq-item.open .faq-chevron {
+      transform: rotate(180deg);
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .faq-item.open .faq-answer {
+      max-height: 200px;
+    }
+
+    .faq-answer-inner {
+      padding: 0 1.5rem 1.25rem;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.7;
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+      text-align: center;
+      padding: 5rem 2rem 7rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-box {
+      position: relative;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 4.5rem 3rem;
+      border-radius: 20px;
+      overflow: hidden;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+    }
+
+    .cta-box::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--cipher), var(--violet), var(--glow));
+    }
+
+    .cta-box::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.1), transparent 60%);
+      pointer-events: none;
+    }
+
+    .cta-box h2 {
+      font-size: clamp(1.6rem, 3.5vw, 2.25rem);
+      font-weight: 900;
+      margin-bottom: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-box p {
+      color: var(--muted);
+      margin-bottom: 2.5rem;
+      font-size: 1.05rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-box .btn { position: relative; z-index: 1; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.82rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    footer a {
+      color: var(--cipher-light);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    footer a:hover { color: var(--cipher); }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+
+    .reveal-scale {
+      opacity: 0;
+      transform: scale(0.92);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .reveal-scale.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal, .reveal-scale { opacity: 1; transform: none; transition: none; }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1024px) {
+      .features-grid, .security-grid { grid-template-columns: repeat(2, 1fr); }
+      .platforms-row { grid-template-columns: repeat(3, 1fr); }
+      .integrations-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: 0.75rem 1rem; }
+      .hero-stats { gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
+      .features-grid, .security-grid { grid-template-columns: 1fr; }
+      .platforms-row { grid-template-columns: repeat(2, 1fr); }
+      .integrations-grid { grid-template-columns: repeat(2, 1fr); }
+      .steps { grid-template-columns: 1fr; gap: 2.5rem; }
+      .steps::before { display: none; }
+      section { padding: 4rem 1rem; }
+      .cta-box { padding: 3rem 1.5rem; }
+    }
+
+    @media (max-width: 480px) {
+      .hero-actions { flex-direction: column; width: 100%; }
+      .btn { justify-content: center; width: 100%; }
+      .hero-stats { flex-direction: column; gap: 1rem; }
+      .platforms-row { grid-template-columns: 1fr 1fr; }
+      .integrations-grid { grid-template-columns: 1fr 1fr; }
+    }
+    /* ── LOADER ── */
+    .loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: var(--vault);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+
+    .loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .loader-shield {
+      width: 80px;
+      height: 80px;
+      animation: loader-pulse 1.2s ease-in-out infinite;
+      filter: drop-shadow(0 0 30px rgba(59, 130, 246, 0.4));
+    }
+
+    .loader-shield svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    @keyframes loader-pulse {
+      0%, 100% { transform: scale(0.9); opacity: 0.6; }
+      50% { transform: scale(1.05); opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .loader-shield { animation: none; opacity: 1; }
+    }
+
+    /* ── PASSWORD DEMO ── */
+    .demo-card {
+      max-width: 500px;
+      margin: 0 auto;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      backdrop-filter: blur(12px);
+    }
+
+    .demo-input-wrap {
+      position: relative;
+      margin-bottom: 1.25rem;
+    }
+
+    .demo-input {
+      width: 100%;
+      padding: 0.9rem 1.25rem;
+      background: var(--plate);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--chrome);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .demo-input::placeholder {
+      color: var(--muted);
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .demo-input:focus {
+      border-color: var(--cipher);
+    }
+
+    .demo-bar-wrap {
+      height: 6px;
+      background: var(--plate);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .demo-bar {
+      height: 100%;
+      width: 0%;
+      border-radius: 3px;
+      transition: width 0.4s ease, background 0.4s ease;
+    }
+
+    .demo-bar.weak { background: var(--danger); width: 25%; }
+    .demo-bar.fair { background: #F59E0B; width: 50%; }
+    .demo-bar.strong { background: var(--glow); width: 100%; }
+
+    .demo-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .demo-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .demo-label.weak { color: var(--danger); }
+    .demo-label.fair { color: #F59E0B; }
+    .demo-label.strong { color: var(--glow); }
+
+    .demo-crack {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* ── SCROLL PROGRESS ── */
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cipher), var(--violet), var(--glow));
+      z-index: 200;
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    /* ── BACK TO TOP ── */
+    .back-to-top {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 90;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s;
+      color: var(--cipher-light);
+    }
+
+    .back-to-top.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .back-to-top:hover {
+      border-color: var(--cipher);
+      background: rgba(59, 130, 246, 0.15);
+      transform: translateY(-3px);
+    }
+
+    /* ── COMPARISON TABLE ── */
+    .comparison-wrap {
+      overflow-x: auto;
+      margin: 0 -1rem;
+      padding: 0 1rem;
+    }
+
+    .comparison-table {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 0.9rem 1.25rem;
+      text-align: center;
+      font-size: 0.88rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .comparison-table th {
+      background: var(--plate);
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: -0.01em;
+    }
+
+    .comparison-table th:first-child,
+    .comparison-table td:first-child {
+      text-align: left;
+      font-weight: 500;
+      color: var(--chrome);
+    }
+
+    .comparison-table th.highlight {
+      color: var(--cipher-light);
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .comparison-table td.highlight {
+      background: rgba(59, 130, 246, 0.04);
+    }
+
+    .comparison-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .comparison-table .check {
+      color: var(--glow);
+      font-weight: 700;
+    }
+
+    .comparison-table .cross {
+      color: var(--muted);
+      opacity: 0.5;
+    }
+
+    .comparison-table .partial {
+      color: var(--violet);
+      font-size: 0.8rem;
+    }
+
+    /* ── CHANGELOG ── */
+    .changelog {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .changelog-item {
+      position: relative;
+      padding-left: 2rem;
+      padding-bottom: 2rem;
+    }
+
+    .changelog-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 5px;
+      top: 20px;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .changelog-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 6px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--cipher);
+      border: 2px solid var(--vault);
+      box-shadow: 0 0 0 2px var(--cipher);
+    }
+
+    .changelog-version {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--cipher-light);
+      margin-bottom: 0.5rem;
+    }
+
+    .changelog-list {
+      list-style: none;
+    }
+
+    .changelog-list li {
+      position: relative;
+      padding-left: 1.1rem;
+      margin-bottom: 0.3rem;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+
+    .changelog-list li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: var(--border-hover);
+    }
+
+    /* ── TERMINAL ── */
+    .terminal {
+      max-width: 700px;
+      margin: 0 auto;
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--steel);
+      border: 1px solid var(--border);
+      box-shadow: 0 16px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .terminal-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.7rem 1rem;
+      background: var(--plate);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .terminal-bar .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .terminal-bar .dot.red { background: #EF4444; }
+    .terminal-bar .dot.yellow { background: #F59E0B; }
+    .terminal-bar .dot.green { background: #10B981; }
+
+    .terminal-bar .title {
+      flex: 1;
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .terminal-body {
+      padding: 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      line-height: 1.9;
+    }
+
+    .terminal-body .prompt {
+      color: var(--glow);
+    }
+
+    .terminal-body .cmd {
+      color: var(--cipher-light);
+    }
+
+    .terminal-body .comment {
+      color: var(--muted);
+    }
+
+    .terminal-body .val {
+      color: var(--violet);
+    }
+
+    .terminal-body .section {
+      color: var(--chrome);
+      font-weight: 700;
+    }
+
+    /* ── SHORTCUTS ── */
+    .shortcuts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      max-width: 700px;
+    }
+
+    .shortcut-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      backdrop-filter: blur(12px);
+      transition: border-color 0.3s;
+    }
+
+    .shortcut-item:hover {
+      border-color: var(--border-hover);
+    }
+
+    .shortcut-keys {
+      display: flex;
+      gap: 0.35rem;
+      flex-shrink: 0;
+    }
+
+    .key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 32px;
+      height: 30px;
+      padding: 0 0.5rem;
+      background: var(--plate);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--cipher-light);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+    }
+
+    .shortcut-desc {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 768px) {
+      .shortcuts-grid { grid-template-columns: 1fr; }
+      .comparison-table th, .comparison-table td { padding: 0.7rem 0.8rem; font-size: 0.78rem; }
+    }
+
+    /* ── 3D TILT ON CARDS ── */
+    .tilt {
+      transform-style: preserve-3d;
+      perspective: 1000px;
+    }
+
+    /* ── FLOATING SHIELD ── */
+    .vault-lock {
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .vault-lock { animation: none; }
+    }
+
+    /* ── TERMINAL TYPING ── */
+    .terminal-body .line {
+      overflow: hidden;
+      white-space: nowrap;
+      max-width: 0;
+      animation: type-line 0.6s forwards;
+    }
+
+    .terminal-body .line:nth-child(1) { animation-delay: 0.1s; }
+    .terminal-body .line:nth-child(2) { animation-delay: 0.3s; }
+    .terminal-body .line:nth-child(3) { animation-delay: 0.5s; }
+    .terminal-body .line:nth-child(4) { animation-delay: 0.7s; }
+    .terminal-body .line:nth-child(5) { animation-delay: 0.9s; }
+    .terminal-body .line:nth-child(6) { animation-delay: 1.1s; }
+    .terminal-body .line:nth-child(7) { animation-delay: 1.3s; }
+    .terminal-body .line:nth-child(8) { animation-delay: 1.5s; }
+    .terminal-body .line:nth-child(9) { animation-delay: 1.7s; }
+    .terminal-body .line:nth-child(10) { animation-delay: 1.9s; }
+    .terminal-body .line:nth-child(11) { animation-delay: 2.1s; }
+
+    @keyframes type-line {
+      to { max-width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .terminal-body .line { animation: none; max-width: 100%; }
+    }
+
+    /* ── GLOW PULSE ON CTA ── */
+    .cta-box {
+      animation: cta-glow 4s ease-in-out infinite;
+    }
+
+    @keyframes cta-glow {
+      0%, 100% { box-shadow: 0 0 0 1px var(--border); }
+      50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.1), 0 0 0 1px var(--border-hover); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cta-box { animation: none; }
+    }
+
+    /* ── THEME TOGGLE ── */
+    .theme-toggle {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.45rem;
+      cursor: pointer;
+      color: var(--muted);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-toggle:hover {
+      color: var(--cipher);
+      border-color: var(--cipher);
+    }
+
+    .icon-moon { display: none; }
+    [data-theme="light"] .icon-sun { display: none; }
+    [data-theme="light"] .icon-moon { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- LOADING SCREEN -->
+  <div class="loader" id="loader">
+    <div class="loader-shield">
+      <svg viewBox="0 0 100 100" fill="none">
+        <defs>
+          <linearGradient id="loaderGrad" x1="50" y1="5" x2="50" y2="95" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#3B82F6" stop-opacity="0.5"/>
+            <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0.15"/>
+          </linearGradient>
+        </defs>
+        <path d="M50 5L10 22v25c0 22 17 42 40 50 23-8 40-28 40-50V22L50 5z" fill="url(#loaderGrad)" stroke="#3B82F6" stroke-width="1.5"/>
+        <rect x="34" y="38" width="32" height="26" rx="4" fill="#0C1017" stroke="#3B82F6" stroke-width="1.5"/>
+        <circle cx="50" cy="49" r="6" fill="none" stroke="#3B82F6" stroke-width="2"/>
+        <circle cx="50" cy="49" r="2.5" fill="#3B82F6"/>
+        <line x1="50" y1="55" x2="50" y2="61" stroke="#3B82F6" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="scroll-progress" id="scrollProgress"></div>
+
+  <button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+
+  <canvas id="particles"></canvas>
+  <div class="bg-grid"></div>
+  <div class="bg-glow"></div>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#features" onclick="closeMobile()">Возможности</a>
+    <a href="#security" onclick="closeMobile()">Безопасность</a>
+    <a href="#shortcuts" onclick="closeMobile()">Клавиши</a>
+    <a href="#integrations" onclick="closeMobile()">Интеграции</a>
+    <a href="#platforms" onclick="closeMobile()">Платформы</a>
+    <a href="#faq" onclick="closeMobile()">FAQ</a>
+    <a href="https://github.com/vipecoder228/CipherVault/releases/latest" class="btn btn-primary" onclick="closeMobile()">Скачать</a>
+  </div>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-brand">
+      <svg viewBox="0 0 30 30" fill="none">
+        <path d="M15 1L3 7v7c0 7.5 5.1 14.5 12 16.5C21.9 28.5 27 21.5 27 14V7L15 1z" fill="url(#navGrad)" stroke="var(--cipher)" stroke-width="1.2"/>
+        <defs>
+          <linearGradient id="navGrad" x1="15" y1="1" x2="15" y2="30" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="rgba(59,130,246,0.2)"/>
+            <stop offset="100%" stop-color="rgba(59,130,246,0.02)"/>
+          </linearGradient>
+        </defs>
+        <rect x="10" y="12" width="10" height="9" rx="2" fill="var(--steel)" stroke="var(--cipher)" stroke-width="1"/>
+        <circle cx="15" cy="15.5" r="1.5" fill="var(--cipher)"/>
+        <line x1="15" y1="17" x2="15" y2="19.5" stroke="var(--cipher)" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <span>CipherVault</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features">Возможности</a></li>
+      <li><a href="#security">Безопасность</a></li>
+      <li><a href="#shortcuts">Клавиши</a></li>
+      <li><a href="#integrations">Интеграции</a></li>
+      <li><a href="#platforms">Платформы</a></li>
+      <li><a href="https://github.com/vipecoder228/CipherVault/releases/latest" class="nav-cta">Скачать</a></li>
+    </ul>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+      <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+    </button>
+    <button class="hamburger" id="hamburger" onclick="toggleMobile()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      v14.0.5 · MIT License
+    </div>
+
+    <div class="vault-lock">
+      <div class="ring ring-1"></div>
+      <div class="ring ring-2"></div>
+      <div class="ring ring-3"></div>
+      <div class="shield-main">
+        <svg viewBox="0 0 100 100" fill="none">
+          <defs>
+            <linearGradient id="heroGrad" x1="50" y1="5" x2="50" y2="95" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="var(--cipher)" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="var(--violet)" stop-opacity="0.1"/>
+            </linearGradient>
+          </defs>
+          <path d="M50 5L10 22v25c0 22 17 42 40 50 23-8 40-28 40-50V22L50 5z" fill="url(#heroGrad)" stroke="var(--cipher)" stroke-width="1.5"/>
+          <rect x="34" y="38" width="32" height="26" rx="4" fill="var(--steel)" stroke="var(--cipher)" stroke-width="1.5"/>
+          <circle cx="50" cy="49" r="6" fill="none" stroke="var(--cipher)" stroke-width="2"/>
+          <circle cx="50" cy="49" r="2.5" fill="var(--cipher)"/>
+          <line x1="50" y1="55" x2="50" y2="61" stroke="var(--cipher)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <h1>
+      Ваши пароли.
+      <span class="line-2">Ваш контроль.</span>
+    </h1>
+    <p class="subtitle">
+      Кроссплатформенный менеджер паролей с шифрованием AES-256-GCM.
+      Полная offline-безопасность на всех ваших устройствах.
+    </p>
+
+    <div class="hero-actions">
+      <a href="https://github.com/vipecoder228/CipherVault/releases/latest" class="btn btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Скачать бесплатно
+      </a>
+      <a href="https://github.com/vipecoder228/CipherVault" class="btn btn-secondary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
+        Исходный код
+      </a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-value">300+</div>
+        <div class="stat-label">Тестов</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">AES-256</div>
+        <div class="stat-label">Шифрование</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">5</div>
+        <div class="stat-label">Платформ</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">0</div>
+        <div class="stat-label">Утечек</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how-it-works">
+    <div class="reveal" style="text-align: center;">
+      <div class="section-label" style="justify-content: center;">Как это работает</div>
+      <h2 class="section-title">Три шага к безопасности</h2>
+      <p class="section-desc" style="margin-left: auto; margin-right: auto;">Начать использовать CipherVault проще, чем вы думаете.</p>
+    </div>
+
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-number">01</div>
+        <h3>Установите</h3>
+        <p>Скачайте приложение для вашей платформы. Windows, macOS, Linux или Android — выбор за вами.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">02</div>
+        <h3>Создайте vault</h3>
+        <p>Придумайте мастер-пароль. Все данные будут зашифрованы AES-256-GCM с Argon2id key derivation.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">03</div>
+        <h3>Синхронизируйте</h3>
+        <p>Подключите Google Drive для синхронизации между устройствами. Или работайте полностью offline.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="reveal">
+      <div class="section-label">Возможности</div>
+      <h2 class="section-title">Всё, что нужно<br>для безопасности</h2>
+      <p class="section-desc">От генерации паролей до биометрической аутентификации — CipherVault закрывает все потребности.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon blue">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        </div>
+        <h3>AES-256-GCM шифрование</h3>
+        <p>Authenticated encryption всех данных. Ключи хранятся только в памяти, никогда на диске.</p>
+      </div>
+
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon green">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3>Passkeys / FIDO2</h3>
+        <p>Создание passkeys через WebAuthn API. Биометрическая аутентификация на всех устройствах.</p>
+      </div>
+
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon violet">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </div>
+        <h3>Генератор паролей</h3>
+        <p>Случайные пароли, BIP39 passphrase, пресеты от PIN до Strong. Экспорт пресетов в JSON.</p>
+      </div>
+
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon green">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <h3>Здоровье паролей</h3>
+        <p>Анализ слабых, повторяющихся и утёкших паролей. Оценка времени взлома и push-уведомления.</p>
+      </div>
+
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon blue">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <h3>Кастомные поля</h3>
+        <p>Текст, пароль, URL, email, телефон — добавляйте любые поля и шифруйте их вместе с записью.</p>
+      </div>
+
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon violet">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </div>
+        <h3>Массовые операции</h3>
+        <p>Ctrl+Click для выбора нескольких записей, массовое удаление, горячие клавиши для навигации.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PASSWORD DEMO -->
+  <section id="demo">
+    <div class="reveal" style="text-align: center;">
+      <div class="section-label" style="justify-content: center;">Попробуйте</div>
+      <h2 class="section-title">Проверьте свой пароль</h2>
+      <p class="section-desc" style="margin-left: auto; margin-right: auto;">Введите пароль и увидите, насколько он надёжен.</p>
+    </div>
+
+    <div class="demo-card reveal">
+      <div class="demo-input-wrap">
+        <input type="text" class="demo-input" id="demoInput" placeholder="Введите пароль..." autocomplete="off" spellcheck="false">
+      </div>
+      <div class="demo-bar-wrap">
+        <div class="demo-bar" id="demoBar"></div>
+      </div>
+      <div class="demo-info">
+        <span class="demo-label" id="demoLabel">Введите пароль</span>
+        <span class="demo-crack" id="demoCrack"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECURITY -->
+  <section id="security">
+    <div class="reveal">
+      <div class="section-label">Безопасность</div>
+      <h2 class="section-title">Многоуровневая<br>защита</h2>
+      <p class="section-desc">Каждый слой защищён. От шифрования данных до обнуления ключей в памяти.</p>
+    </div>
+
+    <div class="security-grid">
+      <div class="security-item reveal reveal-delay-1">
+        <h4><span class="dot"></span>Защита в памяти</h4>
+        <p>3-проходное обнуление буферов (0x00 → 0xFF → 0x00). Ключи обнуляются при блокировке.</p>
+        <span class="tech-badge">Secure Memory Guard</span>
+      </div>
+
+      <div class="security-item reveal reveal-delay-2">
+        <h4><span class="dot"></span>Constant-time сравнение</h4>
+        <p>Защита от timing attacks. Все сравнения выполняются за фиксированное время.</p>
+        <span class="tech-badge">CSPRNG · crypto.randomInt</span>
+      </div>
+
+      <div class="security-item reveal reveal-delay-3">
+        <h4><span class="dot"></span>k-anonymity</h4>
+        <p>Проверка через HIBP API с SHA-1 префиксом. Полный пароль никогда не покидает устройство.</p>
+        <span class="tech-badge">HIBP · SHA-1 prefix</span>
+      </div>
+
+      <div class="security-item reveal reveal-delay-1">
+        <h4><span class="dot"></span>Аудит-лог</h4>
+        <p>HMAC-SHA256 подписи для целостности. Все действия записываются и зашифрованы.</p>
+        <span class="tech-badge">HMAC-SHA256</span>
+      </div>
+
+      <div class="security-item reveal reveal-delay-2">
+        <h4><span class="dot"></span>Сетевая защита</h4>
+        <p>Rate limiting (4→6→8→10), TLS, CORS только localhost, security headers.</p>
+        <span class="tech-badge">HTTPS · Rate Limiting</span>
+      </div>
+
+      <div class="security-item reveal reveal-delay-3">
+        <h4><span class="dot"></span>Clipboard автоочистка</h4>
+        <p>Настраиваемое время жизни буфера. Автоматическое обнуление после копирования.</p>
+        <span class="tech-badge">10с / 30с / 1-5мин</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHORTCUTS -->
+  <section id="shortcuts">
+    <div class="reveal">
+      <div class="section-label">Горячие клавиши</div>
+      <h2 class="section-title">Быстрое управление</h2>
+      <p class="section-desc">Навигация и копирование в один клик.</p>
+    </div>
+
+    <div class="shortcuts-grid reveal">
+      <div class="shortcut-item">
+        <div class="shortcut-keys"><span class="key">↑</span><span class="key">↓</span></div>
+        <span class="shortcut-desc">Навигация по списку</span>
+      </div>
+      <div class="shortcut-item">
+        <div class="shortcut-keys"><span class="key">Ctrl</span><span class="key">C</span></div>
+        <span class="shortcut-desc">Копировать пароль</span>
+      </div>
+      <div class="shortcut-item">
+        <div class="shortcut-keys"><span class="key">Ctrl</span><span class="key">U</span></div>
+        <span class="shortcut-desc">Копировать логин</span>
+      </div>
+      <div class="shortcut-item">
+        <div class="shortcut-keys"><span class="key">Del</span></div>
+        <span class="shortcut-desc">Удалить запись</span>
+      </div>
+      <div class="shortcut-item">
+        <div class="shortcut-keys"><span class="key">Esc</span></div>
+        <span class="shortcut-desc">Снять выделение</span>
+      </div>
+      <div class="shortcut-item">
+        <div class="shortcut-keys"><span class="key">j</span><span class="key">k</span></div>
+        <span class="shortcut-desc">Vim-навигация</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTEGRATIONS -->
+  <section id="integrations">
+    <div class="reveal" style="text-align: center;">
+      <div class="section-label" style="justify-content: center;">Интеграции</div>
+      <h2 class="section-title">Работает с вашими сервисами</h2>
+      <p class="section-desc" style="margin-left: auto; margin-right: auto;">CipherVault подключается к инструментам, которыми вы уже пользуетесь.</p>
+    </div>
+
+    <div class="integrations-grid reveal">
+      <div class="integration-card">
+        <div class="integration-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        </div>
+        <h4>Telegram</h4>
+        <p>Push-уведомления о утечках паролей</p>
+      </div>
+
+      <div class="integration-card">
+        <div class="integration-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <h4>Google Drive</h4>
+        <p>Синхронизация vault между устройствами</p>
+      </div>
+
+      <div class="integration-card">
+        <div class="integration-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+        </div>
+        <h4>Browser Extension</h4>
+        <p>Автозаполнение в Chrome</p>
+      </div>
+
+      <div class="integration-card">
+        <div class="integration-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </div>
+        <h4>REST API</h4>
+        <p>HTTPS API на порту 19824</p>
+      </div>
+
+      <div class="integration-card">
+        <div class="integration-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        </div>
+        <h4>Push</h4>
+        <p>Capacitor LocalNotifications</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLATFORMS -->
+  <section id="platforms">
+    <div class="reveal" style="text-align: center;">
+      <div class="section-label" style="justify-content: center;">Платформы</div>
+      <h2 class="section-title">Везде, где вы работаете</h2>
+      <p class="section-desc" style="margin-left: auto; margin-right: auto;">CipherVault доступен на всех основных платформах.</p>
+    </div>
+
+    <div class="platforms-row reveal">
+      <div class="platform-card">
+        <div class="platform-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <h4>Windows</h4>
+        <div class="platform-status ready">Electron · Ready</div>
+      </div>
+
+      <div class="platform-card">
+        <div class="platform-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 18c-3.3 0-6-2.7-6-6h6v6z"/><circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.3"/></svg>
+        </div>
+        <h4>macOS</h4>
+        <div class="platform-status ready">Electron · Ready</div>
+      </div>
+
+      <div class="platform-card">
+        <div class="platform-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg>
+        </div>
+        <h4>Linux</h4>
+        <div class="platform-status ready">Electron · Ready</div>
+      </div>
+
+      <div class="platform-card">
+        <div class="platform-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="3"/><line x1="12" y1="18" x2="12" y2="18.01" stroke-width="2"/></svg>
+        </div>
+        <h4>Android</h4>
+        <div class="platform-status ready">Capacitor · Ready</div>
+      </div>
+
+      <div class="platform-card">
+        <div class="platform-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="3"/><line x1="12" y1="18" x2="12" y2="18.01" stroke-width="2"/></svg>
+        </div>
+        <h4>iOS</h4>
+        <div class="platform-status wip">В разработке</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPARISON -->
+  <section id="compare">
+    <div class="reveal" style="text-align: center;">
+      <div class="section-label" style="justify-content: center;">Сравнение</div>
+      <h2 class="section-title">Как мы выглядим<br>на фоне других</h2>
+    </div>
+
+    <div class="comparison-wrap reveal">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="highlight">CipherVault</th>
+            <th>Bitwarden</th>
+            <th>1Password</th>
+            <th>KeePass</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Offline-режим</td>
+            <td class="highlight"><span class="check">✓</span></td>
+            <td><span class="partial">частично</span></td>
+            <td><span class="cross">—</span></td>
+            <td><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Open Source</td>
+            <td class="highlight"><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="cross">—</span></td>
+            <td><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Passkeys / FIDO2</td>
+            <td class="highlight"><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="cross">—</span></td>
+          </tr>
+          <tr>
+            <td>AES-256-GCM</td>
+            <td class="highlight"><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Мобильное приложение</td>
+            <td class="highlight"><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="partial">через KeePass2Android</span></td>
+          </tr>
+          <tr>
+            <td>Бесплатно</td>
+            <td class="highlight"><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="cross">$2.99/мес</span></td>
+            <td><span class="check">✓</span></td>
+          </tr>
+          <tr>
+            <td>Browser Extension</td>
+            <td class="highlight"><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="check">✓</span></td>
+            <td><span class="partial">KeePassXC</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- TERMINAL -->
+  <section id="tech">
+    <div class="reveal" style="text-align: center;">
+      <div class="section-label" style="justify-content: center;">Стек технологий</div>
+      <h2 class="section-title">Построено на проверенном</h2>
+    </div>
+
+    <div class="terminal reveal-scale">
+      <div class="terminal-bar">
+        <div class="dot red"></div>
+        <div class="dot yellow"></div>
+        <div class="dot green"></div>
+        <span class="title">ciphervault — stack</span>
+      </div>
+      <div class="terminal-body">
+        <div class="line"><span class="prompt">$</span> <span class="cmd">cat</span> stack.json</div>
+        <div class="line"><br></div>
+        <div class="line">{</div>
+        <div class="line">&nbsp;&nbsp;<span class="section">"version"</span>: <span class="val">"14.0.5"</span>,</div>
+        <div class="line">&nbsp;&nbsp;<span class="section">"desktop"</span>: <span class="val">"Electron 33"</span>,</div>
+        <div class="line">&nbsp;&nbsp;<span class="section">"mobile"</span>: <span class="val">"Capacitor 8"</span>,</div>
+        <div class="line">&nbsp;&nbsp;<span class="section">"frontend"</span>: <span class="val">"React 19 + TypeScript"</span>,</div>
+        <div class="line">&nbsp;&nbsp;<span class="section">"crypto"</span>: <span class="val">"AES-256-GCM + Argon2id"</span>,</div>
+        <div class="line">&nbsp;&nbsp;<span class="section">"database"</span>: <span class="val">"sql.js (SQLite)"</span>,</div>
+        <div class="line">&nbsp;&nbsp;<span class="section">"tests"</span>: <span class="val">"Vitest (300 passed)"</span>,</div>
+        <div class="line">&nbsp;&nbsp;<span class="section">"api"</span>: <span class="val">"REST / HTTPS :19824"</span>,</div>
+        <div class="line">&nbsp;&nbsp;<span class="section">"passkeys"</span>: <span class="val">"WebAuthn API"</span></div>
+        <div class="line">}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHANGELOG -->
+  <section id="changelog">
+    <div class="reveal" style="text-align: center;">
+      <div class="section-label" style="justify-content: center;">Changelog</div>
+      <h2 class="section-title">Что нового</h2>
+    </div>
+
+    <div class="changelog reveal">
+      <div class="changelog-item">
+        <div class="changelog-version">v14.0.5</div>
+        <ul class="changelog-list">
+          <li>Passkeys / FIDO2 через WebAuthn API</li>
+          <li>Синхронизация через Google Drive</li>
+          <li>Push-уведомления о утечках</li>
+        </ul>
+      </div>
+      <div class="changelog-item">
+        <div class="changelog-version">v14.0.0</div>
+        <ul class="changelog-list">
+          <li>Расширение для Chrome с автозаполнением</li>
+          <li>Зашифрованный аудит-лог (HMAC-SHA256)</li>
+          <li>Автоматическая очистка буфера обмена</li>
+        </ul>
+      </div>
+      <div class="changelog-item">
+        <div class="changelog-version">v13.0.0</div>
+        <ul class="changelog-list">
+          <li>Биометрическая аутентификация (Face ID / Touch ID)</li>
+          <li>Кастомные поля записей</li>
+          <li>Анализ здоровья паролей</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="reveal" style="text-align: center;">
+      <div class="section-label" style="justify-content: center;">FAQ</div>
+      <h2 class="section-title">Частые вопросы</h2>
+    </div>
+
+    <div class="faq-list">
+      <div class="faq-item reveal">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          CipherVault бесплатный?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Да, CipherVault полностью бесплатен и распространяется под MIT лицензией. Исходный код доступен на GitHub.</div>
+        </div>
+      </div>
+
+      <div class="faq-item reveal">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Мои пароли покидают устройство?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Нет. Все данные шифруются AES-256-GCM локально. Даже проверка на утечки работает через k-anonymity — отправляется только SHA-1 префикс пароля, никогда полный пароль.</div>
+        </div>
+      </div>
+
+      <div class="faq-item reveal">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Как работает синхронизация?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Синхронизация через Google Drive — зашифрованный vault загружается на ваш диск. Также можно работать полностью offline без облака.</div>
+        </div>
+      </div>
+
+      <div class="faq-item reveal">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Поддерживается ли биометрия?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Да. На мобильных устройствах — Face ID / Touch ID через Capacitor. На десктопе — passkeys через WebAuthn API с поддержкой Windows Hello и Touch ID на Mac.</div>
+        </div>
+      </div>
+
+      <div class="faq-item reveal">
+        <button class="faq-question" onclick="toggleFaq(this)">
+          Есть ли расширение для браузера?
+          <svg class="faq-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="faq-answer">
+          <div class="faq-answer-inner">Да, CipherVault имеет расширение для Chrome с функцией автозаполнения паролей на веб-сайтах.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="cta-box reveal">
+      <h2>Начните защищать<br>пароли сегодня</h2>
+      <p>Бесплатно. Открытый исходный код. Без компромиссов в безопасности.</p>
+      <a href="https://github.com/vipecoder228/CipherVault/releases/latest" class="btn btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Скачать CipherVault
+      </a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>CipherVault v14.0.5 · MIT License · <a href="https://github.com/vipecoder228/CipherVault">GitHub</a></p>
+  </footer>
+
+  <script>
+    // ── PARTICLES ──
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let mouse = { x: null, y: null };
+    let animId;
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.3;
+        this.vy = (Math.random() - 0.5) * 0.3;
+        this.radius = Math.random() * 1.5 + 0.5;
+        this.opacity = Math.random() * 0.4 + 0.1;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+        if (mouse.x !== null) {
+          const dx = mouse.x - this.x;
+          const dy = mouse.y - this.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 150) {
+            this.x -= dx * 0.002;
+            this.y -= dy * 0.002;
+          }
+        }
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(59, 130, 246, ${this.opacity})`;
+        ctx.fill();
+      }
+    }
+
+    function initParticles() {
+      particles = [];
+      const count = Math.min(Math.floor((canvas.width * canvas.height) / 15000), 80);
+      for (let i = 0; i < count; i++) {
+        particles.push(new Particle());
+      }
+    }
+
+    function connectParticles() {
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(59, 130, 246, ${0.06 * (1 - dist / 120)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => { p.update(); p.draw(); });
+      connectParticles();
+      animId = requestAnimationFrame(animate);
+    }
+
+    resize();
+    initParticles();
+    animate();
+
+    window.addEventListener('resize', () => {
+      resize();
+      initParticles();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    window.addEventListener('mouseleave', () => {
+      mouse.x = null;
+      mouse.y = null;
+    });
+
+    // ── 3D TILT ON CARDS ──
+    document.querySelectorAll('.feature-card, .security-item, .platform-card, .integration-card').forEach(card => {
+      card.classList.add('tilt');
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateX = (y - centerY) / centerY * -6;
+        const rotateY = (x - centerX) / centerX * 6;
+        card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = '';
+      });
+    });
+
+    // ── PARALLAX ON HERO ──
+    const heroEl = document.querySelector('.hero');
+    const vaultLock = document.querySelector('.vault-lock');
+    window.addEventListener('scroll', () => {
+      if (!vaultLock) return;
+      const scrolled = window.scrollY;
+      if (scrolled < window.innerHeight) {
+        vaultLock.style.transform = `translateY(${-scrolled * 0.08}px)`;
+      }
+    });
+
+    // ── THEME TOGGLE ──
+    const savedTheme = localStorage.getItem('theme');
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    if (savedTheme === 'light' || (!savedTheme && prefersLight)) {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      if (current === 'light') {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+      }
+    }
+
+    // ── LOADER ──
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loader').classList.add('hidden');
+      }, 1200);
+    });
+
+    // ── PASSWORD DEMO ──
+    const demoInput = document.getElementById('demoInput');
+    const demoBar = document.getElementById('demoBar');
+    const demoLabel = document.getElementById('demoLabel');
+    const demoCrack = document.getElementById('demoCrack');
+
+    function getCharsetSize(pw) {
+      let size = 0;
+      if (/[a-z]/.test(pw)) size += 26;
+      if (/[A-Z]/.test(pw)) size += 26;
+      if (/[0-9]/.test(pw)) size += 10;
+      if (/[^a-zA-Z0-9]/.test(pw)) size += 33;
+      return size || 1;
+    }
+
+    function estimateCrackTime(pw) {
+      if (!pw) return '';
+      const charset = getCharsetSize(pw);
+      const combinations = Math.pow(charset, pw.length);
+      const guessesPerSec = 1e10;
+      const seconds = combinations / guessesPerSec / 2;
+      if (seconds < 1) return 'мгновенно';
+      if (seconds < 60) return Math.round(seconds) + 'с';
+      if (seconds < 3600) return Math.round(seconds / 60) + 'мин';
+      if (seconds < 86400) return Math.round(seconds / 3600) + 'ч';
+      if (seconds < 31536000) return Math.round(seconds / 86400) + 'дн';
+      if (seconds < 31536000 * 1000) return Math.round(seconds / 31536000) + ' лет';
+      if (seconds < 31536000 * 1e6) return Math.round(seconds / 31536000 / 1000) + ' тыс. лет';
+      if (seconds < 31536000 * 1e9) return Math.round(seconds / 31536000 / 1e6) + ' млрд лет';
+      return '∞';
+    }
+
+    demoInput.addEventListener('input', () => {
+      const pw = demoInput.value;
+      demoBar.className = 'demo-bar';
+      demoLabel.className = 'demo-label';
+
+      if (!pw) {
+        demoLabel.textContent = 'Введите пароль';
+        demoLabel.style.color = '';
+        demoCrack.textContent = '';
+        return;
+      }
+
+      const entropy = pw.length * Math.log2(getCharsetSize(pw));
+      let level, text;
+
+      if (entropy < 28) { level = 'weak'; text = 'Слабый'; }
+      else if (entropy < 50) { level = 'fair'; text = 'Средний'; }
+      else { level = 'strong'; text = 'Надёжный'; }
+
+      demoBar.classList.add(level);
+      demoLabel.classList.add(level);
+      demoLabel.textContent = text;
+      demoCrack.textContent = 'время взлома: ' + estimateCrackTime(pw);
+    });
+
+    // ── ANIMATED COUNTERS ──
+    const counters = [
+      { el: null, target: 300, suffix: '+', raw: '300+' },
+      { el: null, target: null, raw: 'AES-256' },
+      { el: null, target: 5, suffix: '', raw: '5' },
+      { el: null, target: 0, suffix: '', raw: '0' }
+    ];
+
+    const statValues = document.querySelectorAll('.stat-value');
+    counters.forEach((c, i) => { c.el = statValues[i]; });
+
+    let countersAnimated = false;
+
+    function animateCounters() {
+      if (countersAnimated) return;
+      countersAnimated = true;
+
+      counters.forEach(c => {
+        if (c.target === null) return;
+        const duration = 1500;
+        const start = performance.now();
+
+        function tick(now) {
+          const elapsed = now - start;
+          const progress = Math.min(elapsed / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          const current = Math.round(c.target * eased);
+          c.el.textContent = current + (c.suffix || '');
+          if (progress < 1) requestAnimationFrame(tick);
+        }
+
+        requestAnimationFrame(tick);
+      });
+    }
+
+    const heroStats = document.querySelector('.hero-stats');
+    if (heroStats) {
+      const statsObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          animateCounters();
+          statsObserver.disconnect();
+        }
+      }, { threshold: 0.5 });
+      statsObserver.observe(heroStats);
+    }
+
+    // ── SCROLL PROGRESS ──
+    const progressBar = document.getElementById('scrollProgress');
+    const backToTop = document.getElementById('backToTop');
+
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = (scrollTop / docHeight) * 100;
+      progressBar.style.width = progress + '%';
+
+      if (scrollTop > 400) {
+        backToTop.classList.add('visible');
+      } else {
+        backToTop.classList.remove('visible');
+      }
+    });
+
+    // ── SCROLL REVEAL ──
+    const reveals = document.querySelectorAll('.reveal, .reveal-scale');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+    reveals.forEach(el => observer.observe(el));
+
+    // ── MOBILE MENU ──
+    function toggleMobile() {
+      document.getElementById('mobileMenu').classList.toggle('open');
+      document.getElementById('hamburger').classList.toggle('active');
+      document.body.style.overflow = document.getElementById('mobileMenu').classList.contains('open') ? 'hidden' : '';
+    }
+
+    function closeMobile() {
+      document.getElementById('mobileMenu').classList.remove('open');
+      document.getElementById('hamburger').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // ── FAQ ──
+    function toggleFaq(btn) {
+      const item = btn.parentElement;
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    }
+  </script>
+
+</body>
+</html>
